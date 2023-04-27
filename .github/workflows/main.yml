@@ -1,0 +1,55 @@
+---
+name: Build
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+jobs:
+  sonarcloud:
+    name: Jfrog github integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Set up node.js
+        uses: actions/setup-node@v3.3.0
+        with:
+          node-version: "18"
+          cache: npm
+      - name: Install all required dependencies
+        run: yarn install
+      - name: Create  artifact dist folder
+        run: |
+          mkdir dist
+          sudo apt update
+          sudo apt install tar gzip build-essential
+          cd  dist
+      - name: Code Build
+        run: >
+          yarn run build
+
+          echo ${{ format('{{V {0} {1} {2}!}}', '0.', '0.', github.run_number) }}
+      - name: upload all aritifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: ./dist
+      - name: validate all input
+        run: |
+          pwd
+          ls 
+          cd dist
+      - name: download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: dist
+      - name: validate output
+        run: |
+          pwd
+          ls
